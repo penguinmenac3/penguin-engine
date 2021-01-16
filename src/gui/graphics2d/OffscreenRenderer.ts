@@ -1,10 +1,16 @@
-import { v4 as uuid_v4 } from 'uuid'
 import { _CommonRenderer } from "./_CommonRenderer";
 
 export class OffscreenRenderer extends _CommonRenderer {
-    public constructor(width: number, height: number) {
+    private static instance = new OffscreenRenderer(0, 0)
+
+    public static getInstance(width: number, height: number): OffscreenRenderer {
+        this.instance.setSize(width, height)
+        this.instance.resetRotationalTransform()
+        return this.instance
+    }
+
+    private constructor(width: number, height: number) {
         let canvas = document.createElement("canvas")
-        //canvas.setAttribute('id', uuid_v4())
         canvas.hidden = true
         super(canvas)
         this.setSize(width, height)
