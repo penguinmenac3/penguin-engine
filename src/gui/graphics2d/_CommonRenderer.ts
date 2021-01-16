@@ -9,7 +9,7 @@ export class _CommonRenderer {
     protected uiScalingFactor: number = 1.0
     private screenRadius: number = 0
 
-    private context: CanvasRenderingContext2D
+    public context: CanvasRenderingContext2D
     private cameraPosition = new Point(0, 0)
 
     constructor(public canvas: HTMLCanvasElement) {
@@ -39,35 +39,32 @@ export class _CommonRenderer {
         return new Point(x - this.canvas.width / 2, y - this.canvas.height / 2 )
     }
 
+    public setRotationalTransform(dx: number, dy: number, yaw: number): void {
+        let c = Math.cos(yaw)
+        let s = Math.sin(yaw)
+        this.context.setTransform(c, s, -s, c, dx, dy)
+    }
+
+    public resetRotationalTransform(): void {
+        this.context.resetTransform()
+    }
+
     public drawSprite(
-        sprite: Sprite, pose: Pose, size: number[], centered: boolean = true,
+        sprite: Sprite, pose: Pose, size: number[],
+        absolute: boolean = false, centered: boolean = true,
         offsetX: number = 0, offsetY: number = 0, offsetYaw: number = 0
     ): void {
         if (sprite.image != null) {
-            //this.context.mozImageSmoothingEnabled = false
-            //this.context.webkitImageSmoothingEnabled = false
-            let relativeX = pose.x - this.cameraPosition.x
-            let relativeY = pose.y - this.cameraPosition.y
-            let totalScalingFactor = _CommonRenderer.TILESIZE * this.uiScalingFactor
-            var screenCenteredX = relativeX * totalScalingFactor
-            var screenCenteredY = relativeY * totalScalingFactor
-            if (centered) {
-                let objectRadius = Point.norm(sprite.w * totalScalingFactor, sprite.h * totalScalingFactor)
-                if (Point.norm(screenCenteredX, screenCenteredY) > (this.screenRadius + objectRadius) * 1.2) {
+            var { posX, posY, totalScalingFactor } = this.computeOffsets(pose, absolute, centered, size)
+            if (!absolute) {
+                let objectRadius = Point.norm(size[0] * totalScalingFactor, size[1] * totalScalingFactor)
+                if (Point.norm(posX - this.canvas.width / 2, posY - this.canvas.height / 2) > this.screenRadius + objectRadius) {
                     return
                 }
-                screenCenteredX += this.canvas.width / 2
-                screenCenteredY += this.canvas.height / 2
-            } else {
-                screenCenteredX += 0.5 * size[0] * totalScalingFactor
-                screenCenteredY += 0.5 * size[1] * totalScalingFactor
             }
-            this.context.imageSmoothingEnabled = false
-            this.context.translate(screenCenteredX, screenCenteredY)
-            this.context.rotate(pose.yaw + offsetYaw)
+            this.setRotationalTransform(posX, posY, pose.yaw + offsetYaw)
             this.context.drawImage(sprite.image, sprite.x, sprite.y, sprite.w, sprite.h, offsetX - size[0] / 2 * totalScalingFactor, offsetY - size[1] / 2 * totalScalingFactor, size[0] * totalScalingFactor, size[1] * totalScalingFactor)
-            this.context.rotate(-pose.yaw - offsetYaw)
-            this.context.translate(-screenCenteredX, -screenCenteredY)
+            this.resetRotationalTransform()
         }
     }
 
@@ -144,6 +141,7 @@ export class _CommonRenderer {
 
     public clear(): void {
         this.canvas.width = this.canvas.width
+        this.context.imageSmoothingEnabled = false
     }
 
     public toSprite(): Sprite {

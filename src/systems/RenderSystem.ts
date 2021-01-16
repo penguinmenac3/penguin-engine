@@ -58,7 +58,7 @@ export class RenderSystem implements BaseSystem {
 
     private renderIfCorrectLayer(render: RenderComponent, transform: TransformComponent) {
         if (render.layer == this.layer && render.sprite != null) {
-            this.renderer.drawSprite(render.sprite, transform.pose, render.size, undefined, render.offsetX, render.offsetY, render.offsetYaw);
+            this.renderer.drawSprite(render.sprite, transform.pose, render.size, undefined, undefined, render.offsetX, render.offsetY, render.offsetYaw);
         }
     }
 }
