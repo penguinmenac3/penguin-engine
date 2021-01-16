@@ -62,13 +62,12 @@ export class _CommonRenderer {
                 screenCenteredX += 0.5 * size[0] * totalScalingFactor
                 screenCenteredY += 0.5 * size[1] * totalScalingFactor
             }
-            this.context.save()
             this.context.imageSmoothingEnabled = false
             this.context.translate(screenCenteredX, screenCenteredY)
             this.context.rotate(pose.yaw + offsetYaw)
-            this.context.translate(offsetX, offsetY)
-            this.context.drawImage(sprite.image, sprite.x, sprite.y, sprite.w, sprite.h, -size[0] / 2 * totalScalingFactor, -size[1] / 2 * totalScalingFactor, size[0] * totalScalingFactor, size[1] * totalScalingFactor)
-            this.context.restore()
+            this.context.drawImage(sprite.image, sprite.x, sprite.y, sprite.w, sprite.h, offsetX - size[0] / 2 * totalScalingFactor, offsetY - size[1] / 2 * totalScalingFactor, size[0] * totalScalingFactor, size[1] * totalScalingFactor)
+            this.context.rotate(-pose.yaw - offsetYaw)
+            this.context.translate(-screenCenteredX, -screenCenteredY)
         }
     }
 
@@ -77,12 +76,9 @@ export class _CommonRenderer {
         if (!absolute && Point.norm(posX - this.canvas.width / 2, posY - this.canvas.height / 2) > (this.screenRadius + size) * 1.2) {
             return
         }
-        this.context.save()
         this.context.fillStyle = color  // "#RRGGBB"
         this.context.font = size + 'px san-serif'
-        this.context.translate(posX, posY)
-        this.context.fillText(text, 0, 0 + size)
-        this.context.restore()
+        this.context.fillText(text, posX, posY + size)
     }
 
     public fillRect(position: Point, color: string, size: number[], absolute: boolean = true, centered: boolean = true): void {
@@ -93,11 +89,8 @@ export class _CommonRenderer {
                 return
             }
         }
-        this.context.save()
         this.context.fillStyle = color
-        this.context.translate(posX, posY)
-        this.context.fillRect(-size[0] / 2 * totalScalingFactor, -size[1] / 2 * totalScalingFactor, size[0] * totalScalingFactor, size[1] * totalScalingFactor)
-        this.context.restore()
+        this.context.fillRect(posX - size[0] / 2 * totalScalingFactor, posY - size[1] / 2 * totalScalingFactor, size[0] * totalScalingFactor, size[1] * totalScalingFactor)
     }
 
     public strokeRect(position: Point, color: string, size: number[], absolute: boolean = true, centered: boolean = false): void {
@@ -108,11 +101,8 @@ export class _CommonRenderer {
                 return
             }
         }
-        this.context.save()
         this.context.strokeStyle = color
-        this.context.translate(posX, posY)
-        this.context.strokeRect(-size[0] / 2 * totalScalingFactor, -size[1] / 2 * totalScalingFactor, size[0] * totalScalingFactor, size[1] * totalScalingFactor)
-        this.context.restore()
+        this.context.strokeRect(posX - size[0] / 2 * totalScalingFactor, posY - size[1] / 2 * totalScalingFactor, size[0] * totalScalingFactor, size[1] * totalScalingFactor)
     }
 
     public strokeCircle(position: Point, color: string, size: number, lineWidth: number = 0.0, absolute: boolean = false, centered: boolean = true): void {
@@ -123,14 +113,11 @@ export class _CommonRenderer {
                 return
             }
         }
-        this.context.save()
         this.context.strokeStyle = color
         this.context.lineWidth = Math.max(Math.round(lineWidth * totalScalingFactor), 1.0)
-        this.context.translate(posX, posY)
         this.context.beginPath()
-        this.context.arc(0,0, size / 2 * totalScalingFactor, 0, 2 * Math.PI)
+        this.context.arc(posX, posY, size / 2 * totalScalingFactor, 0, 2 * Math.PI)
         this.context.stroke()
-        this.context.restore()
     }
 
     private computeOffsets(position: Point, absolute: boolean, centered: boolean, size: number[]) {
