@@ -41,6 +41,8 @@ export class DebugBoxSystem implements BaseSystem {
             }
             offY += 20
             this.renderer.drawText("Total: " + Math.round(totalTime * 10) / 10 + "ms", new Point(0, offY), "#00FF99")
+            offY += 20
+            this.renderer.drawText("FrameTime: " + Math.round(elapsedTime * 1000 * 10) / 10 + "ms", new Point(0, offY), "#00FF99")
         }
     }
 }

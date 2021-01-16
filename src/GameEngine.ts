@@ -87,7 +87,7 @@ export class GameEngine {
 
     private looper(timestamp: number): void {
         if (this.lastTimestamp == -1)
-        this.lastTimestamp = timestamp
+            this.lastTimestamp = timestamp
         let elapsedTime = (timestamp - this.lastTimestamp) / 1000.0
         this.lastTimestamp = timestamp
         this.tick(elapsedTime)
