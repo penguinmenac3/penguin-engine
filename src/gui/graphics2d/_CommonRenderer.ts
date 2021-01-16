@@ -63,7 +63,7 @@ export class _CommonRenderer {
                 }
             }
             this.setRotationalTransform(posX, posY, pose.yaw + offsetYaw)
-            this.context.drawImage(sprite.image, sprite.x, sprite.y, sprite.w, sprite.h, offsetX - size[0] / 2 * totalScalingFactor, offsetY - size[1] / 2 * totalScalingFactor, size[0] * totalScalingFactor, size[1] * totalScalingFactor)
+            this.context.drawImage(sprite.image, sprite.x, sprite.y, sprite.w, sprite.h, offsetX * totalScalingFactor - size[0] / 2 * totalScalingFactor, offsetY * totalScalingFactor - size[1] / 2 * totalScalingFactor, size[0] * totalScalingFactor, size[1] * totalScalingFactor)
             this.resetRotationalTransform()
         }
     }
