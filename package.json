@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "types": "lib",
   "scripts": {
-    "build": "ttsc -p ."
+    "build": "ttsc -p .",
+    "watch": "ttsc -w -p ."
   },
   "keywords": [
     "game-engine",

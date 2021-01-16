@@ -11,6 +11,6 @@ String.prototype.format = function(): string {
     return formatted as string;
 }
 
-String.prototype.replaceAll = function(search, replace): string {
+String.prototype.replaceAll = function(search: string, replace: string): string {
     return this.split(search).join(replace);
 }
