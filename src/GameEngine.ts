@@ -1,18 +1,13 @@
 import { BaseSystem } from "./systems/BaseSystem"
 import { Entity, hasAttributes } from "./Entity"
-
-
-export interface Message {
-    time: number
-    [propName: string]: any
-}
+import { Commands, Command } from "./Commands"
 
 
 export class GameEngine {
     private lastTimestamp: number = -1
     private running = false
 
-    private messageListeners = new Map<string, Function[]>()
+    private commandBuffer = new Map<string, Command[]>()
     private entities = new Map<string, Entity>()
     public recommendedSystemInsertionIndex: number = 3
     private systems: BaseSystem[] = []
@@ -28,31 +23,18 @@ export class GameEngine {
     }
     private constructor() {}
 
-    public addMessageListener(channel: string, callback: Function) {
-        if (!this.messageListeners.has(channel)) {
-            this.messageListeners.set(channel, [])
-        }
-        let listeners = this.messageListeners.get(channel)!
-        listeners.push(callback)
-    }
-
-    public sendMessage(message: Message, channel: string, allowNetworking: boolean = true) {
-        if (this.messageListeners.has(channel)) {
-            for (let listener of this.messageListeners.get(channel)!) {
-                listener(message)
-            }
+    public sendCommand(command: Command, system: string, allowNetworking: boolean = true) {
+        if (this.commandBuffer.has(system)) {
+            this.commandBuffer.get(system)!.push(command)
         }
         if (allowNetworking) {
-            this.sendMessage({"time": 0, "message": message, "channel": channel}, "networking", false)
+            this.sendCommand({"time": 0, "type": "NetworkSend", "command": command, "system": system}, "NetworkingSystem", false)
         }
-    }
-
-    public addSystem(system: BaseSystem, index: number): void {
-        this.systems.splice(index, 0, system)
     }
 
     public pushSystem(system: BaseSystem): void {
         this.systems.push(system)
+        this.commandBuffer.set(system.name, [])
     }
 
     public addEntity(entity: Entity): string {
@@ -100,9 +82,19 @@ export class GameEngine {
         this.timePerSystem.set(name, 0)
         for (let system of this.systems) {
             let start = performance.now()
+            this.executeCommands(system)
             system.tick(elapsedTime)
             let elapsed = performance.now() - start
             this.timePerSystem.set(system.name, elapsed)
+        }
+    }
+
+    private executeCommands(system: BaseSystem) {
+        if (this.commandBuffer.has(system.name)) {
+            for (let command of this.commandBuffer.get(system.name)!) {
+                Commands.execute(command)
+            }
+            this.commandBuffer.set(system.name, [])
         }
     }
 

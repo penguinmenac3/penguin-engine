@@ -1,6 +1,7 @@
 
 import Peer from "peerjs"
-import { GameEngine, Message } from "../GameEngine";
+import { Commands, Command } from "../Commands";
+import { GameEngine } from "../GameEngine";
 import { BaseSystem } from "./BaseSystem";
 
 
@@ -15,6 +16,7 @@ class _Connection {
     }
 }
 
+
 export class NetworkingSystem implements BaseSystem {
     public name = "NetworkingSystem"
     private peer: Peer
@@ -23,6 +25,7 @@ export class NetworkingSystem implements BaseSystem {
     private timeout: number | undefined = undefined
     
     public constructor(private username: string, localPeerServer: boolean = false) {
+        Commands.register("NetworkSend", (command: Command) => this.handleCommand(command))
         if (localPeerServer) {
             this.peer = new Peer(undefined, {
                 host: "/",
@@ -44,7 +47,6 @@ export class NetworkingSystem implements BaseSystem {
                 that.handlePacket(JSON.parse(data), connection)
             });
         });
-        GameEngine.getInstance().addMessageListener("networking", (message: Message) => this.handleMessage(message))
     }
 
     public connect(uuid: string) {
@@ -77,8 +79,8 @@ export class NetworkingSystem implements BaseSystem {
         }
     }
 
-    private handleMessage(message: Message) {
-        let packet = {"message": message.message, "channel": message.channel}
+    private handleCommand(command: Command) {
+        let packet = {"command": command.command, "system": command.system}
         this.sendToAllActiveConnections(packet)
     }
 
@@ -87,7 +89,7 @@ export class NetworkingSystem implements BaseSystem {
         let engine = GameEngine.getInstance()
         this.messageQueue = []
         for (let packet of packets) {
-            engine.sendMessage(packet.message, packet.channel, false)
+            engine.sendCommand(packet.command, packet.system, false)
         }
     }
 }
