@@ -20,18 +20,19 @@ interface PlayableEntities {
 }
 
 
-export class RenderSystem implements BaseSystem {
+export class RenderSystem extends BaseSystem {
     public static BACKGROUND_LAYER: number = 0
     public static MIDGROUND_LAYER: number = 1
     public static FOREGROUND_LAYER: number = 2
 
-    public name = "RenderSystem"
     private renderer = Renderer.getInstance()
     private engine = GameEngine.getInstance()
 
     private elapsedTime = 0.01
 
-    public constructor(private layer: number) {}
+    public constructor(private layer: number) {
+        super("RenderSystem")
+    }
 
     tick(elapsedTime: number): void {
         this.elapsedTime = elapsedTime

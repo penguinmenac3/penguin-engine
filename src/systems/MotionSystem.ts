@@ -5,9 +5,9 @@ import { TransformComponent } from "../components/TransformComponent";
 import { GameEngine } from "../GameEngine";
 import { Point } from "../geometry/Point";
 import { BaseSystem } from "./BaseSystem";
-import { Commands, Command } from "../Commands";
 import { Pose } from "../geometry/Pose";
 import { AnimationComponent } from "../components/_api";
+import { ChangeMotionCommand, ChangePoseCommand } from "../commands/MotionCommands";
 
 
 interface MotionEntity {
@@ -16,53 +16,32 @@ interface MotionEntity {
     motion: MotionComponent
 }
 
+
 interface CollidableEntity {
     transform: TransformComponent,
     collider: ColliderComponent
 }
 
 
-export class MotionSystem implements BaseSystem {
-    public name = "MotionSystem"
+export class MotionSystem extends BaseSystem {
     private engine = GameEngine.getInstance()
     public constructor() {
-        Commands.register("ChangeMotion", (command: Command) => this.handleChangeMotion(command))
-        Commands.register("ChangePose", (command: Command) => this.handleChangePose(command))
+        super("MotionSystem")
+        this.registerCommandHandler(ChangeMotionCommand, this.handleChangeMotion)
+        this.registerCommandHandler(ChangePoseCommand, this.handleChangePose)
     }
 
-    public static changeMotion(uuid: string, time: number, x: number | null, y: number | null, yaw: number | null, getAnimation: Function | null) {
-        let command = Commands.makeCommand(time, "ChangeMotion")
-        command.uuid = uuid
-        command.x = x
-        command.y = y
-        command.yaw = yaw
-        command.getAnimation = getAnimation
-        return command
-    }
-
-    private handleChangeMotion(command: Command): void {
+    private handleChangeMotion(command: ChangeMotionCommand): void {
         let entity = this.engine.getEntity(command.uuid)
         if (entity) {
             let motionEntity: MotionEntity = <any>entity
             if (command.x != null) motionEntity.motion.pose.x = command.x
             if (command.y != null) motionEntity.motion.pose.y = command.y
             if (command.yaw != null) motionEntity.motion.pose.yaw = command.yaw
-            if (entity.animation && command.getAnimation != null) {
-                (entity.animation as AnimationComponent).currentAnimation = command.getAnimation(motionEntity.motion.pose)
-            }
         }
     }
 
-    public static changePose(uuid: string, time: number, x: number | null, y: number | null, yaw: number | null) {
-        let command = Commands.makeCommand(time, "ChangePose")
-        command.uuid = uuid
-        command.x = x
-        command.y = y
-        command.yaw = yaw
-        return command
-    }
-
-    private handleChangePose(command: Command): void {
+    private handleChangePose(command: ChangePoseCommand): void {
         let entity = this.engine.getEntity(command.uuid)
         if (entity) {
             let motionEntity: MotionEntity = <any>entity

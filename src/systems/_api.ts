@@ -1,4 +1,5 @@
 import { BaseSystem } from "./BaseSystem"
+import { Command } from "../commands/Command"
 import { AnimationSystem } from "./AnimationSystem"
 import { DebugBoxSystem } from "./DebugBoxSystem"
 import { MotionSystem } from "./MotionSystem"
@@ -8,6 +9,7 @@ import { UserInputSystem } from "./UserInputSystem"
 
 
 export {
+    Command,
     BaseSystem,
     AnimationSystem,
     DebugBoxSystem,

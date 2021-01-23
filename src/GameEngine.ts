@@ -1,16 +1,18 @@
 import { BaseSystem } from "./systems/BaseSystem"
+import { Command } from "./commands/Command"
 import { Entity, hasAttributes } from "./Entity"
-import { Commands, Command } from "./Commands"
+import { BroadcastCommand } from "./commands/BroadcastCommand"
 
 
 export class GameEngine {
     private lastTimestamp: number = -1
     private running = false
 
-    private commandBuffer = new Map<string, Command[]>()
     private entities = new Map<string, Entity>()
     public recommendedSystemInsertionIndex: number = 3
     private systems: BaseSystem[] = []
+    private systemsByName = new Map<string, BaseSystem>()
+    private systemsReceiveAllCommands: string[] = []
     public debugOverlay: number = 0
     public timePerSystem = new Map<string, number>()
 
@@ -23,18 +25,27 @@ export class GameEngine {
     }
     private constructor() {}
 
-    public sendCommand(command: Command, system: string, allowNetworking: boolean = true) {
-        if (this.commandBuffer.has(system)) {
-            this.commandBuffer.get(system)!.push(command)
-        }
-        if (allowNetworking) {
-            this.sendCommand({"time": 0, "type": "NetworkSend", "command": command, "system": system}, "NetworkingSystem", false)
+    public sendCommand(command: Command, systemName: string, allowBroadcasting: boolean = true): void {
+        if (!this.systemsByName.has(systemName)) return
+        let system = this.systemsByName.get(systemName)!
+
+        if (!system.commands.has(command.type)) return
+        let handler = system.commands.get(command.type)!
+        handler(command)
+        if (allowBroadcasting) {
+            let wrapped = new BroadcastCommand(command, systemName)
+            for (let systemName of this.systemsReceiveAllCommands) {
+                this.sendCommand(wrapped, systemName, false)
+            }
         }
     }
 
-    public pushSystem(system: BaseSystem): void {
+    public pushSystem(system: BaseSystem, receiveAllCommands: boolean = false): void {
         this.systems.push(system)
-        this.commandBuffer.set(system.name, [])
+        this.systemsByName.set(system.name, system)
+        if (receiveAllCommands) {
+            this.systemsReceiveAllCommands.push(system.name)
+        }
     }
 
     public addEntity(entity: Entity): string {
@@ -82,19 +93,9 @@ export class GameEngine {
         this.timePerSystem.set(name, 0)
         for (let system of this.systems) {
             let start = performance.now()
-            this.executeCommands(system)
             system.tick(elapsedTime)
             let elapsed = performance.now() - start
             this.timePerSystem.set(system.name, elapsed)
-        }
-    }
-
-    private executeCommands(system: BaseSystem) {
-        if (this.commandBuffer.has(system.name)) {
-            for (let command of this.commandBuffer.get(system.name)!) {
-                Commands.execute(command)
-            }
-            this.commandBuffer.set(system.name, [])
         }
     }
 

@@ -13,12 +13,13 @@ interface DebugBoxEntity {
 }
 
 
-export class DebugBoxSystem implements BaseSystem {
-    public name = "DebugBoxSystem"
+export class DebugBoxSystem extends BaseSystem {
     private renderer = Renderer.getInstance()
     private engine = GameEngine.getInstance()
 
-    public constructor() {}
+    public constructor() {
+        super("DebugBoxSystem")
+    }
 
     tick(elapsedTime: number): void {
         if (this.engine.debugOverlay == 2) {

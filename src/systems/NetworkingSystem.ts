@@ -1,8 +1,9 @@
 
 import Peer from "peerjs"
-import { Commands, Command } from "../Commands";
 import { GameEngine } from "../GameEngine";
+import { BroadcastCommand } from "../commands/BroadcastCommand";
 import { BaseSystem } from "./BaseSystem";
+import { Command } from "../commands/Command";
 
 
 class _Connection {
@@ -17,15 +18,16 @@ class _Connection {
 }
 
 
-export class NetworkingSystem implements BaseSystem {
-    public name = "NetworkingSystem"
+export class NetworkingSystem extends BaseSystem {
     private peer: Peer
     private activeConnections: _Connection[] = []
     private messageQueue: any[] = []
     private timeout: number | undefined = undefined
     
     public constructor(private username: string, localPeerServer: boolean = false) {
-        Commands.register("NetworkSend", (command: Command) => this.handleCommand(command))
+        super("NetworkingSystem")
+        this.registerCommandHandler(BroadcastCommand, this.handleCommand)
+
         if (localPeerServer) {
             this.peer = new Peer(undefined, {
                 host: "/",
@@ -79,7 +81,7 @@ export class NetworkingSystem implements BaseSystem {
         }
     }
 
-    private handleCommand(command: Command) {
+    private handleCommand(command: BroadcastCommand) {
         let packet = {"command": command.command, "system": command.system}
         this.sendToAllActiveConnections(packet)
     }

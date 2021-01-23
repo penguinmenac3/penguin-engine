@@ -1,4 +1,5 @@
 import { keys } from "ts-transformer-keys";
+import { AnimationCommand } from "../commands/AnimationCommands";
 import { AnimationComponent } from "../components/AnimationComponent";
 import { RenderComponent } from "../components/RenderComponent";
 import { RenderComponentList } from "../components/RenderComponentList";
@@ -6,19 +7,28 @@ import { GameEngine } from "../GameEngine";
 import { BaseSystem } from "./BaseSystem";
 
 
-interface AnimationComponents {
+interface AnimationEntity {
     render: RenderComponent | RenderComponentList
     animation: AnimationComponent
 }
 
-export class AnimationSystem implements BaseSystem {
-    public name = "AnimationSystem"
-    
+export class AnimationSystem extends BaseSystem {    
     private engine = GameEngine.getInstance()
-    public constructor() {}
+    public constructor() {
+        super("AnimationSystem")
+        this.registerCommandHandler(AnimationCommand, this.handleChangeAnimation)
+    }
+
+    private handleChangeAnimation(command: AnimationCommand): void {
+        let entity = this.engine.getEntity(command.uuid)
+        if (entity) {
+            let animationEntity: AnimationEntity = <any>entity
+            animationEntity.animation.currentAnimation = command.animation
+        }
+    }
 
     tick(elapsedTime: number, ): void {
-        let animationComponents = this.engine.getEntities<AnimationComponents>(keys<AnimationComponents>())
+        let animationComponents = this.engine.getEntities<AnimationEntity>(keys<AnimationEntity>())
         for (let entity of animationComponents) {
             entity.animation.animationTime += elapsedTime
             if (entity.animation.currentAnimation != entity.animation.lastAnimation) {

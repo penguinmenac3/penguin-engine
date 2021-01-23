@@ -11,8 +11,7 @@ interface PlayableEntities {
     player: PlayerComponent
 }
 
-export class UserInputSystem implements BaseSystem {
-    public name = "UserInputSystem"
+export class UserInputSystem extends BaseSystem {
     private engine = GameEngine.getInstance()
     private GP_AXIS_STEPS: number = 50
     private GP_DEAD_ZONE: number = 0.1
@@ -22,6 +21,7 @@ export class UserInputSystem implements BaseSystem {
     private actionQueue: any[] = []
 
     public constructor() {
+        super("UserInputSystem")
         this.renderer = Renderer.getInstance()
         this.renderer.addEventListener('touchstart', function(ev) {ev.preventDefault()}, false)
         this.renderer.addEventListener('pointerdown', (ev) => this.pointerdown(ev), false)
