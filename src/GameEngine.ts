@@ -63,6 +63,10 @@ export class GameEngine {
         return entity.uuid
     }
 
+    public updateEntity(entity: Entity): string {
+        return this.addEntity(entity)
+    }
+
     public deleteEntity(uuid: string): void {
         for (let [requirementStr, list] of this.entityLists) {
             list.delete(uuid)
