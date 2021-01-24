@@ -21,44 +21,65 @@ interface PlayableEntities {
 
 
 export class RenderSystem extends BaseSystem {
-    public static BACKGROUND_LAYER: number = 0
-    public static MIDGROUND_LAYER: number = 1
-    public static FOREGROUND_LAYER: number = 2
-
     private renderer = Renderer.getInstance()
     private engine = GameEngine.getInstance()
+    public static BACKGROUND_LAYER = 0
+    public static MIDGROUND_LAYER = 1
+    public static FOREGROUND_LAYER = 2
 
     private elapsedTime = 0.01
 
-    public constructor(private layer: number) {
+    public constructor(private ySorting: boolean = true) {
         super("RenderSystem")
     }
 
     tick(elapsedTime: number): void {
         this.elapsedTime = elapsedTime
-        if (this.layer == RenderSystem.BACKGROUND_LAYER) {
-            this.renderer.clear()
-            let pos = new Point(0, 0)
-            let players = this.engine.getEntities<PlayableEntities>(keys<PlayableEntities>())
-            for (let player of players) {
-                pos = player.transform.pose
-            }
-            this.renderer.setCamera(pos)
+        this.renderer.clear()
+        let pos = new Point(0, 0)
+        let players = this.engine.getEntities<PlayableEntities>(keys<PlayableEntities>())
+        for (let player of players) {
+            pos = player.transform.pose
         }
+        this.renderer.setCamera(pos)
 
-        for (let entity of this.engine.getEntities<RenderableEntity>(keys<RenderableEntity>())) {
-            if (entity.render instanceof RenderComponentList) {
-                for (let [name, component] of entity.render.components) {
-                    this.renderIfCorrectLayer(component, entity.transform)
+        let layers = this.sortEntitiesIntoLayers();
+        this.renderLayers(layers);
+    }
+
+    private renderLayers(layers: Map<number, RenderableEntity[]>) {
+        let layer_ids = Array.from(layers.keys()).sort();
+        for (let id of layer_ids) {
+            let entities = layers.get(id)!;
+            if (this.ySorting) {
+                entities.sort((a, b) => a.transform.pose.y - b.transform.pose.y)
+            }
+            for (let entity of entities) {
+                if (entity.render instanceof RenderComponentList) {
+                    for (let [name, component] of entity.render.components) {
+                        this.renderIfValid(component, entity.transform);
+                    }
+                } else {
+                    this.renderIfValid(entity.render, entity.transform);
                 }
-            } else {
-                this.renderIfCorrectLayer(entity.render, entity.transform)
             }
         }
     }
 
-    private renderIfCorrectLayer(render: RenderComponent, transform: TransformComponent) {
-        if (render.layer == this.layer && render.sprite != null) {
+    private sortEntitiesIntoLayers() {
+        let layers = new Map<number, RenderableEntity[]>();
+        for (let entity of this.engine.getEntities<RenderableEntity>(keys<RenderableEntity>())) {
+            let layer = entity.render.layer;
+            if (!layers.has(layer)) {
+                layers.set(layer, []);
+            }
+            layers.get(layer)!.push(entity);
+        }
+        return layers;
+    }
+
+    private renderIfValid(render: RenderComponent, transform: TransformComponent) {
+        if (render.sprite != null) {
             this.renderer.drawSprite(render.sprite, transform.pose, render.size, undefined, undefined, render.offsetX, render.offsetY, render.offsetYaw);
         }
     }

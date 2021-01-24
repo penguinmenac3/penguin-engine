@@ -6,7 +6,7 @@ export class RenderComponent extends BaseComponent {
     public sprite: Sprite | null = null
     constructor(
         sprite: Promise<Sprite> | Sprite,
-        public layer: number = RenderSystem.MIDGROUND_LAYER,
+        public layer: number = 1,
         public size: number[] = [1, 1], 
         public offsetX: number = 0,
         public offsetY: number = 0,
