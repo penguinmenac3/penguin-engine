@@ -24,8 +24,8 @@ export class RenderSystem extends BaseSystem {
     private renderer = Renderer.getInstance()
     private engine = GameEngine.getInstance()
     public static BACKGROUND_LAYER = 0
-    public static MIDGROUND_LAYER = 1
-    public static FOREGROUND_LAYER = 2
+    public static MIDGROUND_LAYER = 100
+    public static FOREGROUND_LAYER = 200
     private playerQuery: Function
     private renderEntityQuery: Function
 
