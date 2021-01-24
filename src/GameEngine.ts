@@ -8,7 +8,7 @@ export class GameEngine {
     private lastTimestamp: number = -1
     private running = false
 
-    private entities = new Map<string, Entity>()
+    private entityLists = new Map<string, Map<string, Entity>>()
     public recommendedSystemInsertionIndex: number = 3
     private systems: BaseSystem[] = []
     private systemsByName = new Map<string, BaseSystem>()
@@ -23,7 +23,9 @@ export class GameEngine {
         }
         return GameEngine.instance
     }
-    private constructor() {}
+    private constructor() {
+        this.entityLists.set("", new Map<string, Entity>())
+    }
 
     public sendCommand(command: Command, systemName: string, allowBroadcasting: boolean = true): void {
         if (!this.systemsByName.has(systemName)) return
@@ -52,22 +54,47 @@ export class GameEngine {
         if (entity.uuid == "") {
             throw Error("Entities must have a valid uuid!")
         }
-        this.entities.set(entity.uuid, entity)
+        for (let [requirementStr, list] of this.entityLists) {
+            let requirements = requirementStr.split(",")
+            if (requirementStr == "" || hasAttributes(entity, requirements)) {
+                list.set(entity.uuid, entity)
+            }
+        }
         return entity.uuid
     }
 
     public deleteEntity(uuid: string): void {
-        this.entities.delete(uuid)
+        for (let [requirementStr, list] of this.entityLists) {
+            list.delete(uuid)
+        }
     }
 
     public getEntity(uuid: string): Entity | undefined {
-        return this.entities.get(uuid)
+        return this.entityLists.get("")!.get(uuid)
+    }
+
+    public createEntityQuery<T>(requirements: string[]) {
+        let requirementStr = requirements.sort().join(",")
+        if (!this.entityLists.has(requirementStr)) {
+            let map = new Map<string, Entity>()
+            for (let entity of this.getEntities<Entity>(requirements)) {
+                map.set(entity.uuid, entity)
+            }
+            this.entityLists.set(requirementStr, map)
+        }
+        return () => {
+            return this.entityLists.get(requirementStr)!.values() as IterableIterator<any> as IterableIterator<T>
+        }
     }
 
     public getEntities<T>(requirements: string[]): T[] {
         let start = performance.now()
+        let requirementStr = requirements.sort().join(",")
+        if (this.entityLists.has(requirementStr)) {
+            return Array.from(this.entityLists.get(requirementStr)!.values()) as any[] as T[]
+        }
         let result: T[] = []
-        for (let [uuid, entity] of this.entities) {
+        for (let [uuid, entity] of this.entityLists.get("")!) {
             if (hasAttributes(entity, requirements)) {
                 result.push(entity as any as T)
             }

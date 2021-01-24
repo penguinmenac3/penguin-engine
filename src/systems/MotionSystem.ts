@@ -25,10 +25,16 @@ interface CollidableEntity {
 
 export class MotionSystem extends BaseSystem {
     private engine = GameEngine.getInstance()
+    private motionEntityQuery: Function
+    private collidableEntityQuery: Function
+
     public constructor() {
         super("MotionSystem")
         this.registerCommandHandler(ChangeMotionCommand, this.handleChangeMotion)
         this.registerCommandHandler(ChangePoseCommand, this.handleChangePose)
+        
+        this.motionEntityQuery = this.engine.createEntityQuery<MotionEntity>(keys<MotionEntity>())
+        this.collidableEntityQuery = this.engine.createEntityQuery<CollidableEntity>(keys<CollidableEntity>())
     }
 
     private handleChangeMotion(command: ChangeMotionCommand): void {
@@ -52,15 +58,13 @@ export class MotionSystem extends BaseSystem {
     }
 
     tick(elapsedTime: number): void {
-        let motionEntities = this.engine.getEntities<MotionEntity>(keys<MotionEntity>())
-        let collidableEntities = this.engine.getEntities<CollidableEntity>(keys<CollidableEntity>())
-        for (let entity of motionEntities) {
+        for (let entity of this.motionEntityQuery()) {
             entity.transform.pose.x += elapsedTime * entity.motion.pose.x
             entity.transform.pose.y += elapsedTime * entity.motion.pose.y
             
             let isColliding = false
             if (entity.motion.canCollide) {
-                for (let x of collidableEntities) {
+                for (let x of this.collidableEntityQuery()) {
                     if (this.isColliding(entity.transform, x.transform, x.collider)) {
                         isColliding = true
                         break

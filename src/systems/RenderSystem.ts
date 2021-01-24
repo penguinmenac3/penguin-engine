@@ -26,18 +26,22 @@ export class RenderSystem extends BaseSystem {
     public static BACKGROUND_LAYER = 0
     public static MIDGROUND_LAYER = 1
     public static FOREGROUND_LAYER = 2
+    private playerQuery: Function
+    private renderEntityQuery: Function
 
     private elapsedTime = 0.01
 
     public constructor(private ySorting: boolean = true) {
         super("RenderSystem")
+        this.playerQuery = this.engine.createEntityQuery<PlayableEntities>(keys<PlayableEntities>())
+        this.renderEntityQuery = this.engine.createEntityQuery<RenderableEntity>(keys<RenderableEntity>())
     }
 
     tick(elapsedTime: number): void {
         this.elapsedTime = elapsedTime
         this.renderer.clear()
         let pos = new Point(0, 0)
-        let players = this.engine.getEntities<PlayableEntities>(keys<PlayableEntities>())
+        let players = this.playerQuery()
         for (let player of players) {
             pos = player.transform.pose
         }
@@ -68,7 +72,7 @@ export class RenderSystem extends BaseSystem {
 
     private sortEntitiesIntoLayers() {
         let layers = new Map<number, RenderableEntity[]>();
-        for (let entity of this.engine.getEntities<RenderableEntity>(keys<RenderableEntity>())) {
+        for (let entity of this.renderEntityQuery()) {
             let layer = entity.render.layer;
             if (!layers.has(layer)) {
                 layers.set(layer, []);

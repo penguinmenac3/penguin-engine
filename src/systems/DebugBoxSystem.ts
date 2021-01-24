@@ -16,14 +16,16 @@ interface DebugBoxEntity {
 export class DebugBoxSystem extends BaseSystem {
     private renderer = Renderer.getInstance()
     private engine = GameEngine.getInstance()
+    private debugBoxEntityQuery: Function
 
     public constructor() {
         super("DebugBoxSystem")
+        this.debugBoxEntityQuery = this.engine.createEntityQuery<DebugBoxEntity>(keys<DebugBoxEntity>())
     }
 
     tick(elapsedTime: number): void {
         if (this.engine.debugOverlay == 2) {
-            for (let entity of this.engine.getEntities<DebugBoxEntity>(keys<DebugBoxEntity>())) {
+            for (let entity of this.debugBoxEntityQuery()) {
                 let position = new Point(entity.transform.pose.x + entity.debugBox.box.cx, entity.transform.pose.y + entity.debugBox.box.cy)
                 let topLeft = new Point(entity.transform.pose.x + entity.debugBox.box.cx - entity.debugBox.box.w / 2, entity.transform.pose.y + entity.debugBox.box.cy - entity.debugBox.box.h / 2)
                 this.renderer.strokeRect(position, entity.debugBox.color, [entity.debugBox.box.w, entity.debugBox.box.h], false, true)

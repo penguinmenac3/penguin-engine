@@ -19,10 +19,12 @@ export class UserInputSystem extends BaseSystem {
     private inputMapping = new Map<string, string>()
     private renderer: Renderer
     private actionQueue: any[] = []
+    private playerEntityQuery: Function
 
     public constructor() {
         super("UserInputSystem")
         this.renderer = Renderer.getInstance()
+        this.playerEntityQuery = this.engine.createEntityQuery<PlayableEntities>(keys<PlayableEntities>())
         this.renderer.addEventListener('touchstart', function(ev) {ev.preventDefault()}, false)
         this.renderer.addEventListener('pointerdown', (ev) => this.pointerdown(ev), false)
         this.renderer.addEventListener('pointermove', (ev) => this.pointermove(ev), false)
@@ -132,12 +134,11 @@ export class UserInputSystem extends BaseSystem {
     }
 
     tick(elapsedTime: number): void {
-        let players = this.engine.getEntities<PlayableEntities>(keys<PlayableEntities>())
         this.handleGamepads()
 
         let actions = this.actionQueue
         this.actionQueue = []
-        for (let entity of players) {
+        for (let entity of this.playerEntityQuery()) {
             for (let action of actions) {
                 entity.player.actions.push(action)
             }

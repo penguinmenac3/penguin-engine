@@ -14,9 +14,12 @@ interface AnimationEntity {
 
 export class AnimationSystem extends BaseSystem {    
     private engine = GameEngine.getInstance()
+    private animationEntityQuery: Function
+
     public constructor() {
         super("AnimationSystem")
         this.registerCommandHandler(AnimationCommand, this.handleChangeAnimation)
+        this.animationEntityQuery = this.engine.createEntityQuery<AnimationEntity>(keys<AnimationEntity>())
     }
 
     private handleChangeAnimation(command: AnimationCommand): void {
@@ -28,7 +31,7 @@ export class AnimationSystem extends BaseSystem {
     }
 
     tick(elapsedTime: number, ): void {
-        let animationComponents = this.engine.getEntities<AnimationEntity>(keys<AnimationEntity>())
+        let animationComponents = this.animationEntityQuery()
         for (let entity of animationComponents) {
             entity.animation.animationTime += elapsedTime
             if (entity.animation.currentAnimation != entity.animation.lastAnimation) {
