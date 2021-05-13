@@ -7,6 +7,8 @@ import { Command } from "../commands/Command";
 
 
 class _Connection {
+    public uuid: string = ""
+    public name: string = ""
     constructor(private conn: Peer.DataConnection) {}
 
     public send(packet: any): void {
@@ -22,6 +24,7 @@ export class NetworkingSystem extends BaseSystem {
     private peer: Peer
     private activeConnections: _Connection[] = []
     private messageQueue: any[] = []
+    private uuid: string = ""
     private timeout: number | undefined = undefined
     
     public constructor(private username: string, localPeerServer: boolean = false) {
@@ -37,7 +40,7 @@ export class NetworkingSystem extends BaseSystem {
             this.peer = new Peer()
         }
         this.peer.on("open", uuid => {
-            console.log(uuid)
+            this.uuid = uuid
         })
         var that = this;
         this.peer.on('connection', function(conn) {
@@ -51,7 +54,34 @@ export class NetworkingSystem extends BaseSystem {
         });
     }
 
+    public getUUID() {
+        return this.uuid
+    }
+
+    private getActiveUUIDs(): string[] {
+        let result: string[] = []
+        for(let connection of this.activeConnections) {
+            if (connection.uuid != "") {
+                result.push(connection.uuid)
+            }
+        }
+        return result
+    }
+
+    private hasConnection(uuid: string) {
+        if (uuid == this.getUUID()) {
+            return true
+        }
+        for(let connection of this.activeConnections) {
+            if (connection.uuid == uuid) {
+                return true
+            }
+        }
+        return false
+    }
+
     public connect(uuid: string) {
+        if (this.hasConnection(uuid)) return
         var conn = this.peer.connect(uuid)
         var that = this
         conn.on('open', function() {
@@ -66,17 +96,37 @@ export class NetworkingSystem extends BaseSystem {
 
     private sendToAllActiveConnections(packet: any) {
         for(let connection of this.activeConnections) {
+            // TODO handle when connection closes. maybe this has to be handled somewhere else as a onclose.
             connection.send(packet)
         }
     }
 
+    private sendToPlayer(packet: any, name: string) {
+        for(let connection of this.activeConnections) {
+            if (connection.name == name) {
+                connection.send(packet)
+            }
+        }
+    }
+
     private getHandshake(): any {
-        return {"name": this.username}
+        return {
+            "message": "handshake",
+            "name": this.username,
+            "uuid": this.getUUID(),
+            "known_uuids": this.getActiveUUIDs()
+        }
     }
 
     private handlePacket(packet: any, connection: _Connection) {
         var start = new Date()
-        if (packet.message) {
+        if (packet.message == "handshake") {
+            connection.name = packet.name
+            connection.uuid = packet.uuid
+            for (let known_uuid of packet.known_uuids) {
+                this.connect(known_uuid)
+            }
+        } else {
             this.messageQueue.push(packet)
         }
     }
