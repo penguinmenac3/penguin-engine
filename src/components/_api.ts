@@ -1,6 +1,7 @@
 import { BaseComponent } from "./BaseComponent"
 import { AnimationComponent } from "./AnimationComponent"
 import { ColliderComponent } from "./ColliderComponent"
+import { ChunkComponent } from "./ChunkComponent"
 import { DebugBoxComponent } from "./DebugBoxComponent"
 import { InteractionComponent } from "./InteractionComponent"
 import { MotionComponent } from "./MotionComponent"
@@ -13,6 +14,7 @@ export {
     BaseComponent,
     AnimationComponent,
     ColliderComponent,
+    ChunkComponent,
     DebugBoxComponent,
     InteractionComponent,
     MotionComponent,
