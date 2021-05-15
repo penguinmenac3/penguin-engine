@@ -34,10 +34,6 @@ export class TiledChunkLoader implements ChunkLoaderInterface {
     ) {
         this.tiledMapPromise = TiledFormatMap.loadMap("maps/" + initialMapId + ".json")
     }
-
-    public removeMapPrefix(rawName: string): string {
-        return rawName
-    }
     
     public createChunk(id: string, x: number, y: number, chunkWidth: number, chunkHeight: number): void {
         let startLoading = Date.now()

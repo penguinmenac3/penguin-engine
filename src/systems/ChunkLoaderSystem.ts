@@ -24,7 +24,6 @@ interface PlayableEntities {
 export interface ChunkLoaderInterface {
     deleteChunk(uuid: string): void;
     unloadMap(): void;
-    removeMapPrefix(rawName: string): string;
     createChunk(id: string, x: number, y: number, chunkWidth: number, chunkHeight: number): void;
 }
 
@@ -115,7 +114,6 @@ export class ChunkLoaderSystem extends BaseSystem {
     }
 
     private createChunk(i: number, j: number) {
-        let mapName = this.chunkLoader!.removeMapPrefix(this.map)
-        this.chunkLoader!.createChunk(mapName, i, j, ChunkLoaderSystem.CHUNK_WIDTH, ChunkLoaderSystem.CHUNK_HEIGHT)
+        this.chunkLoader!.createChunk(this.map, i, j, ChunkLoaderSystem.CHUNK_WIDTH, ChunkLoaderSystem.CHUNK_HEIGHT)
     }
 }
